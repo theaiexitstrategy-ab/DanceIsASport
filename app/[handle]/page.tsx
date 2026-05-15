@@ -5,6 +5,7 @@ import Particles from '@/components/Particles';
 import Reveal from '@/components/Reveal';
 import StatCountUp from '@/components/StatCountUp';
 import BookButton from '@/components/BookButton';
+import { headers } from 'next/headers';
 import { serverSupabase } from '@/lib/supabase';
 import type {
   DancerWithRelations,
@@ -59,9 +60,30 @@ export async function generateMetadata({ params }: { params: { handle: string } 
 
 const MINT_TAGS = new Set(['D1 Prospect', 'Choreographer', 'College Athlete']);
 
+async function trackView(dancerId: string) {
+  try {
+    const h = headers();
+    const referrer = h.get('referer');
+    const fwd = h.get('x-forwarded-for') || '';
+    const ip = fwd.split(',')[0]?.trim() || 'unknown';
+    let hash = 'unknown';
+    if (typeof crypto !== 'undefined' && crypto.subtle) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(ip));
+      hash = Array.from(new Uint8Array(buf))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('')
+        .slice(0, 32);
+    }
+    await serverSupabase().from('profile_views').insert({ dancer_id: dancerId, viewer_ip_hash: hash, referrer });
+  } catch (e) {
+    console.warn('trackView skipped:', e instanceof Error ? e.message : e);
+  }
+}
+
 export default async function ProfilePage({ params }: { params: { handle: string } }) {
   const dancer = await getDancer(params.handle);
   if (!dancer) notFound();
+  trackView(dancer.id).catch(() => {});
 
   const services = (dancer.dancer_services || []).sort((a: DancerService, b: DancerService) => a.sort_order - b.sort_order);
   const media = (dancer.dancer_media || []).sort((a: DancerMedia, b: DancerMedia) => a.sort_order - b.sort_order);

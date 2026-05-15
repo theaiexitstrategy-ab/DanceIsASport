@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Nav from '@/components/Nav';
 import Particles from '@/components/Particles';
 import { browserSupabase } from '@/lib/supabase';
+import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { uploadToCloudinary } from '@/lib/cloudinary';
 
 const STYLE_OPTIONS = [
@@ -149,7 +150,10 @@ export default function OnboardPage() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const sb = browserSupabase();
+      const sb = getSupabaseBrowser();
+      const {
+        data: { user },
+      } = await sb.auth.getUser();
 
       const { data: inserted, error: dancerErr } = await sb
         .from('dancers')
@@ -168,6 +172,7 @@ export default function OnboardPage() {
           nil_verified: true,
           parental_consent: isUnder18 ? form.parental_consent : false,
           is_published: true,
+          user_id: user?.id ?? null,
         })
         .select()
         .single();
@@ -213,7 +218,11 @@ export default function OnboardPage() {
         if (mediaErr) console.error('dancer_media insert failed:', mediaErr);
       }
 
-      router.push(`/${form.handle.toLowerCase()}`);
+      if (user) {
+        router.push('/dashboard');
+      } else {
+        router.push(`/${form.handle.toLowerCase()}`);
+      }
     } catch (e) {
       console.error('Onboarding submit threw:', e);
       const msg = e instanceof Error ? e.message : 'Something went wrong publishing your profile.';
