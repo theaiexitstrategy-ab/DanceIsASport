@@ -1,0 +1,144 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #faf9fc;
+  --bg2: #f3f1f8;
+  --bg3: #ede9f5;
+  --purple: #7c5cbf;
+  --purple-mid: #9b7fd4;
+  --purple-light: #c4aee8;
+  --purple-pale: #ede9f5;
+  --mint: #5bbfa0;
+  --mint-light: #a8dfd0;
+  --mint-pale: #e4f5f0;
+  --gray: #7a7585;
+  --gray-light: #b5b0c0;
+  --gray-pale: #eceaf2;
+  --white: #ffffff;
+  --text: #2a2535;
+  --text2: #5a5468;
+  --border: rgba(124, 92, 191, 0.15);
+  --border2: rgba(124, 92, 191, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-jost), 'Jost', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--purple-pale);
+  border-radius: 4px;
+}
+
+.font-serif {
+  font-family: var(--font-cormorant), 'Cormorant Garamond', serif;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse-slow {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.7;
+  }
+}
+
+@keyframes dotPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(91, 191, 160, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(91, 191, 160, 0);
+  }
+}
+
+@keyframes chipGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(91, 191, 160, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 10px 2px rgba(91, 191, 160, 0.15);
+  }
+}
+
+@keyframes orb {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(-30px, 20px) scale(1.15);
+  }
+}
+
+.shimmer-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.4) 50%, transparent 60%);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+  pointer-events: none;
+}
+
+.shimmer-soft::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.25) 50%, transparent 60%);
+  background-size: 200% 100%;
+  animation: shimmer 4s 2s infinite;
+  pointer-events: none;
+}
+
+.social-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: var(--mint);
+  flex-shrink: 0;
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+.avail-glow {
+  animation: chipGlow 3s ease-in-out infinite;
+}
+
+.orb-anim {
+  animation: orb 8s ease-in-out infinite alternate;
+}
+
+.pulse-icon {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
