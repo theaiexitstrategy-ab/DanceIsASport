@@ -148,65 +148,78 @@ export default function OnboardPage() {
     }
     setSubmitting(true);
     setSubmitError(null);
-    const sb = browserSupabase();
+    try {
+      const sb = browserSupabase();
 
-    const { data: inserted, error: dancerErr } = await sb
-      .from('dancers')
-      .insert({
-        handle: form.handle.toLowerCase(),
-        display_name: form.display_name,
-        location: form.location || null,
-        bio: form.bio,
-        avatar_url: form.avatarUrl,
-        years_experience: form.years,
-        instagram: form.instagram || null,
-        tiktok: form.tiktok || null,
-        of_handle: form.of_handle || null,
-        nil_state: form.nil_state,
-        nil_status: form.nil_status,
-        nil_verified: true,
-        parental_consent: isUnder18 ? form.parental_consent : false,
-        is_published: true,
-      })
-      .select()
-      .single();
+      const { data: inserted, error: dancerErr } = await sb
+        .from('dancers')
+        .insert({
+          handle: form.handle.toLowerCase(),
+          display_name: form.display_name,
+          location: form.location || null,
+          bio: form.bio,
+          avatar_url: form.avatarUrl,
+          years_experience: form.years,
+          instagram: form.instagram || null,
+          tiktok: form.tiktok || null,
+          of_handle: form.of_handle || null,
+          nil_state: form.nil_state,
+          nil_status: form.nil_status,
+          nil_verified: true,
+          parental_consent: isUnder18 ? form.parental_consent : false,
+          is_published: true,
+        })
+        .select()
+        .single();
 
-    if (dancerErr || !inserted) {
+      if (dancerErr || !inserted) {
+        console.error('dancers insert failed:', dancerErr);
+        setSubmitError(dancerErr?.message || 'Could not save profile');
+        setSubmitting(false);
+        return;
+      }
+      const dancerId = inserted.id;
+
+      const allStyles = [...form.styles, ...(form.customStyle ? [form.customStyle] : [])];
+      if (allStyles.length > 0) {
+        const { error: stylesErr } = await sb
+          .from('dancer_styles')
+          .insert(allStyles.map((s) => ({ dancer_id: dancerId, style_name: s })));
+        if (stylesErr) console.error('dancer_styles insert failed:', stylesErr);
+      }
+      if (form.services.length > 0) {
+        const { error: servicesErr } = await sb.from('dancer_services').insert(
+          form.services.map((sv, i) => ({
+            dancer_id: dancerId,
+            name: sv.name,
+            description: sv.description || null,
+            price_label: sv.price_label || null,
+            icon: sv.icon || null,
+            sort_order: i,
+          })),
+        );
+        if (servicesErr) console.error('dancer_services insert failed:', servicesErr);
+      }
+      if (form.media.length > 0) {
+        const { error: mediaErr } = await sb.from('dancer_media').insert(
+          form.media.map((m, i) => ({
+            dancer_id: dancerId,
+            url: m.url,
+            media_type: m.media_type,
+            is_featured: i === 0,
+            sort_order: i,
+          })),
+        );
+        if (mediaErr) console.error('dancer_media insert failed:', mediaErr);
+      }
+
+      router.push(`/${form.handle.toLowerCase()}`);
+    } catch (e) {
+      console.error('Onboarding submit threw:', e);
+      const msg = e instanceof Error ? e.message : 'Something went wrong publishing your profile.';
+      setSubmitError(msg);
       setSubmitting(false);
-      setSubmitError(dancerErr?.message || 'Could not save profile');
-      return;
     }
-    const dancerId = inserted.id;
-
-    const allStyles = [...form.styles, ...(form.customStyle ? [form.customStyle] : [])];
-    if (allStyles.length > 0) {
-      await sb.from('dancer_styles').insert(allStyles.map((s) => ({ dancer_id: dancerId, style_name: s })));
-    }
-    if (form.services.length > 0) {
-      await sb.from('dancer_services').insert(
-        form.services.map((sv, i) => ({
-          dancer_id: dancerId,
-          name: sv.name,
-          description: sv.description || null,
-          price_label: sv.price_label || null,
-          icon: sv.icon || null,
-          sort_order: i,
-        })),
-      );
-    }
-    if (form.media.length > 0) {
-      await sb.from('dancer_media').insert(
-        form.media.map((m, i) => ({
-          dancer_id: dancerId,
-          url: m.url,
-          media_type: m.media_type,
-          is_featured: i === 0,
-          sort_order: i,
-        })),
-      );
-    }
-
-    router.push(`/${form.handle.toLowerCase()}`);
   }
 
   return (
