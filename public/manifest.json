@@ -1,0 +1,15 @@
+{
+  "name": "Dance Is A Sport",
+  "short_name": "DanceIsASport",
+  "description": "The dancer profile + booking marketplace.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#7c5cbf",
+  "background_color": "#faf9fc",
+  "icons": [
+    { "src": "/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

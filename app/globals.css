@@ -23,6 +23,22 @@
   --border2: rgba(124, 92, 191, 0.08);
 }
 
+html.dark {
+  --bg: #0f0d14;
+  --bg2: #16121f;
+  --bg3: #1a1625;
+  --purple-pale: #1f1830;
+  --mint-pale: #16241f;
+  --gray: #a8a3b8;
+  --gray-light: #756f86;
+  --gray-pale: #2a2236;
+  --white: #1a1625;
+  --text: #e8e4f0;
+  --text2: #c4bcd4;
+  --border: rgba(196, 174, 232, 0.18);
+  --border2: rgba(196, 174, 232, 0.1);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -141,4 +157,11 @@ body {
 
 .pulse-icon {
   animation: pulse-slow 3s ease-in-out infinite;
+}
+
+/* Skeleton helper */
+.skeleton {
+  background: linear-gradient(90deg, var(--purple-pale), var(--bg3), var(--purple-pale));
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
 }

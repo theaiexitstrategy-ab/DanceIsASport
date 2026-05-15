@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { uploadToCloudinary } from '@/lib/cloudinary';
+import { useToast } from '@/components/ui/Toaster';
 import type { DashboardData } from '@/app/dashboard/page';
 
 const NIL_STATUS = [
@@ -31,6 +32,7 @@ export default function SettingsTab({ data, onRefresh }: { data: DashboardData; 
   const [uploading, setUploading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   async function pickAvatar(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -69,8 +71,10 @@ export default function SettingsTab({ data, onRefresh }: { data: DashboardData; 
     setSaving(false);
     if (e) {
       setError(e.message);
+      toast({ type: 'error', message: e.message });
     } else {
       setSaved(true);
+      toast({ type: 'success', message: 'Profile saved' });
       onRefresh({
         dancer: {
           ...data.dancer,

@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useToast } from '@/components/ui/Toaster';
 import type { DashboardData } from '@/app/dashboard/page';
 
 export default function ProfileTab({ data, onRefresh: _onRefresh }: { data: DashboardData; onRefresh: (p: Partial<DashboardData>) => void }) {
@@ -32,10 +33,12 @@ export default function ProfileTab({ data, onRefresh: _onRefresh }: { data: Dash
   }, [data]);
 
   const [copied, setCopied] = useState(false);
+  const toast = useToast();
 
   async function copyLink() {
     await navigator.clipboard.writeText(profileUrl);
     setCopied(true);
+    toast({ type: 'success', message: 'Profile link copied' });
     setTimeout(() => setCopied(false), 1600);
   }
 

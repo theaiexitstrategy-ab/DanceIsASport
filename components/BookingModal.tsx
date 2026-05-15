@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { browserSupabase } from '@/lib/supabase';
+import { useToast } from '@/components/ui/Toaster';
 
 type Props = {
   open: boolean;
@@ -32,6 +33,7 @@ export default function BookingModal({ open, onClose, dancerId, dancerName }: Pr
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   useEffect(() => {
     if (!open) return;
@@ -62,9 +64,11 @@ export default function BookingModal({ open, onClose, dancerId, dancerName }: Pr
     setSubmitting(false);
     if (insertError) {
       setError(insertError.message);
+      toast({ type: 'error', message: insertError.message });
       return;
     }
     setSuccess(true);
+    toast({ type: 'success', message: `Request sent to ${dancerName}` });
   }
 
   return (
