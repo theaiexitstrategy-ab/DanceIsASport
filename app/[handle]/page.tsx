@@ -31,7 +31,14 @@ async function getDancer(handle: string): Promise<DancerWithRelations | null> {
     .eq('handle', handle.toLowerCase())
     .eq('is_published', true)
     .maybeSingle();
-  if (error || !data) return null;
+  if (error) {
+    console.error(`getDancer(${handle}) supabase error:`, JSON.stringify(error));
+    return null;
+  }
+  if (!data) {
+    console.warn(`getDancer(${handle}) no row returned`);
+    return null;
+  }
   return data as unknown as DancerWithRelations;
 }
 
