@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import type { DashboardData } from '@/app/dashboard/page';
+import Logo from '../Logo';
 import ProfileTab from './tabs/ProfileTab';
 import BookingsTab from './tabs/BookingsTab';
 import MerchTab from './tabs/MerchTab';
@@ -82,9 +83,7 @@ export default function DashboardShell({ initial }: { initial: DashboardData }) 
     <div className="min-h-[100svh] bg-bg flex flex-col md:flex-row pb-20 md:pb-0">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:w-64 lg:w-72 md:flex-col bg-white/85 backdrop-blur-md border-r border-purple/15 md:sticky md:top-0 md:h-[100svh] p-7">
-        <Link href="/" className="font-serif text-purple text-xl tracking-[0.04em] font-semibold">
-          Dance<span className="text-ink font-light">IsASport</span>
-        </Link>
+        <Logo size={88} priority />
         <div className="mt-10 flex flex-col gap-1">
           {TABS.map((t) => (
             <SidebarBtn key={t.key} active={tab === t.key} onClick={() => setTab(t.key)} icon={t.icon}>

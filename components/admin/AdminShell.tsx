@@ -1,10 +1,10 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import Link from 'next/link';
 import { useState } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import type { AdminData } from '@/app/admin/page';
+import Logo from '../Logo';
 import AdminOverviewTab from './tabs/AdminOverviewTab';
 import AdminDancersTab from './tabs/AdminDancersTab';
 import AdminBookingsTab from './tabs/AdminBookingsTab';
@@ -36,10 +36,8 @@ export default function AdminShell({ initial, adminEmail }: { initial: AdminData
   return (
     <div className="min-h-[100svh] bg-[#0f0d14] text-[#e8e4f0] flex flex-col md:flex-row">
       <aside className="md:w-60 lg:w-64 md:sticky md:top-0 md:h-[100svh] bg-[#16121f] border-b md:border-b-0 md:border-r border-white/10 flex md:flex-col p-5 md:p-7">
-        <Link href="/" className="font-serif text-mint text-lg tracking-[0.04em] font-semibold">
-          Dance<span className="text-white/70 font-light">IsASport</span>
-        </Link>
-        <span className="ml-auto md:ml-0 md:mt-1 text-[0.55rem] tracking-[0.25em] uppercase text-purple-light/70">
+        <Logo size={64} onDark priority />
+        <span className="ml-auto md:ml-0 md:mt-3 text-[0.55rem] tracking-[0.25em] uppercase text-purple-light/70">
           Admin
         </span>
         <nav className="hidden md:flex md:flex-col gap-1 mt-8">

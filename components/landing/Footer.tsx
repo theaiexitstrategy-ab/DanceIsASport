@@ -1,13 +1,12 @@
 import Link from 'next/link';
+import Logo from '../Logo';
 
 export default function Footer() {
   return (
     <footer className="relative border-t border-purple/15 bg-white/70 backdrop-blur-md mt-12">
       <div className="max-w-6xl mx-auto px-5 md:px-10 py-12 md:py-16 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
         <div className="col-span-2 md:col-span-2">
-          <Link href="/" className="font-serif text-purple text-xl tracking-[0.04em] font-semibold">
-            Dance<span className="text-ink font-light">IsASport</span>
-          </Link>
+          <Logo size={80} />
           <p className="mt-4 text-ink2 text-sm leading-relaxed max-w-sm">
             The dancer marketplace. NIL-verified. Privacy-protected. Built for dancers, by dancers.
           </p>

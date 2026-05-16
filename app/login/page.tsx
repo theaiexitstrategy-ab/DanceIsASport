@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
+import Logo from '@/components/Logo';
 import Particles from '@/components/Particles';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
@@ -43,9 +44,7 @@ function LoginInner() {
     <>
       <Particles count={35} />
       <main className="relative z-[1] min-h-[100svh] flex flex-col items-center justify-center px-5">
-        <Link href="/" className="font-serif text-purple text-xl tracking-[0.04em] font-semibold mb-10">
-          Dance<span className="text-ink font-light">IsASport</span>
-        </Link>
+        <Logo size={120} priority className="mb-8" />
 
         <motion.div
           initial={{ opacity: 0, y: 18, scale: 0.98 }}
