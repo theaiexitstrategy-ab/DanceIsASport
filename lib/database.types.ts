@@ -17,6 +17,16 @@ export interface Dancer {
   parental_consent: boolean;
   is_published: boolean;
   created_at: string;
+  user_id: string | null;
+  // Added by the onboarding-wizard / dashboard migration:
+  grad_year: number | null;
+  team_studio: string | null;
+  height: string | null;
+  video_url: string | null;
+  guardian_name: string | null;
+  guardian_email: string | null;
+  requires_guardian_cosign: boolean;
+  guardian_cosign_confirmed: boolean;
 }
 
 export interface DancerStyle {
@@ -42,6 +52,25 @@ export interface DancerMedia {
   media_type: MediaType;
   is_featured: boolean;
   sort_order: number;
+}
+
+export interface DancerSocialLink {
+  id: string;
+  dancer_id: string;
+  platform: string; // 'instagram' | 'tiktok' | 'youtube' | 'twitch'
+  handle_or_url: string;
+  connection_type: string; // 'manual' now; 'oauth' in phase 2
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DancerReelVideo {
+  id: string;
+  dancer_id: string;
+  video_url: string;
+  platform: string | null; // 'youtube' | 'vimeo' | 'instagram' | 'tiktok'
+  display_order: number;
+  date_added: string;
 }
 
 export interface DancerReview {
@@ -84,6 +113,15 @@ interface DancerInsert {
   parental_consent?: boolean;
   is_published?: boolean;
   created_at?: string;
+  user_id?: string | null;
+  grad_year?: number | null;
+  team_studio?: string | null;
+  height?: string | null;
+  video_url?: string | null;
+  guardian_name?: string | null;
+  guardian_email?: string | null;
+  requires_guardian_cosign?: boolean;
+  guardian_cosign_confirmed?: boolean;
 }
 
 interface DancerStyleInsert {
@@ -109,6 +147,25 @@ interface DancerMediaInsert {
   media_type: MediaType;
   is_featured?: boolean;
   sort_order?: number;
+}
+
+interface DancerSocialLinkInsert {
+  id?: string;
+  dancer_id: string;
+  platform: string;
+  handle_or_url: string;
+  connection_type?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface DancerReelVideoInsert {
+  id?: string;
+  dancer_id: string;
+  video_url: string;
+  platform?: string | null;
+  display_order?: number;
+  date_added?: string;
 }
 
 interface DancerReviewInsert {
@@ -164,6 +221,18 @@ export interface Database {
         Update: Partial<DancerReviewInsert>;
         Relationships: EmptyRel;
       };
+      dancer_social_links: {
+        Row: DancerSocialLink;
+        Insert: DancerSocialLinkInsert;
+        Update: Partial<DancerSocialLinkInsert>;
+        Relationships: EmptyRel;
+      };
+      dancer_reel_videos: {
+        Row: DancerReelVideo;
+        Insert: DancerReelVideoInsert;
+        Update: Partial<DancerReelVideoInsert>;
+        Relationships: EmptyRel;
+      };
       booking_requests: {
         Row: BookingRequest;
         Insert: BookingRequestInsert;
@@ -185,4 +254,6 @@ export interface DancerWithRelations extends Dancer {
   dancer_services: DancerService[];
   dancer_media: DancerMedia[];
   dancer_reviews: DancerReview[];
+  dancer_social_links: DancerSocialLink[];
+  dancer_reel_videos: DancerReelVideo[];
 }

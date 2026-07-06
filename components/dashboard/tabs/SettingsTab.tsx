@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { uploadToCloudinary } from '@/lib/cloudinary';
 import { useToast } from '@/components/ui/Toaster';
+import { pickEditableDancerColumns } from '@/lib/dancer-fields';
 import type { DashboardData } from '@/app/dashboard/page';
 
 const NIL_STATUS = [
@@ -14,15 +15,13 @@ const NIL_STATUS = [
   'Other',
 ];
 
+// Profile-facing fields (name, bio, location, styles, video, Instagram, stats) are
+// edited on the Profile tab. Settings covers account-level bits: photo, secondary
+// socials, NIL status, and the danger zone. Both save paths funnel through
+// pickEditableDancerColumns so neither can write a protected column.
 export default function SettingsTab({ data, onRefresh }: { data: DashboardData; onRefresh: (p: Partial<DashboardData>) => void }) {
   const [form, setForm] = useState({
-    display_name: data.dancer.display_name,
-    location: data.dancer.location || '',
-    bio: data.dancer.bio || '',
     avatar_url: data.dancer.avatar_url || '',
-    years_experience: data.dancer.years_experience ?? 5,
-    instagram: data.dancer.instagram || '',
-    tiktok: data.dancer.tiktok || '',
     of_handle: data.dancer.of_handle || '',
     nil_state: data.dancer.nil_state || '',
     nil_status: data.dancer.nil_status || '',
@@ -53,37 +52,24 @@ export default function SettingsTab({ data, onRefresh }: { data: DashboardData; 
     setSaved(false);
     setError(null);
     const sb = getSupabaseBrowser();
-    const { error: e } = await sb
-      .from('dancers')
-      .update({
-        display_name: form.display_name,
-        location: form.location || null,
-        bio: form.bio || null,
-        avatar_url: form.avatar_url || null,
-        years_experience: form.years_experience,
-        instagram: form.instagram || null,
-        tiktok: form.tiktok || null,
-        of_handle: form.of_handle || null,
-        nil_state: form.nil_state || null,
-        nil_status: form.nil_status || null,
-      })
-      .eq('id', data.dancer.id);
+    const patch = pickEditableDancerColumns({
+      avatar_url: form.avatar_url || null,
+      of_handle: form.of_handle || null,
+      nil_state: form.nil_state || null,
+      nil_status: form.nil_status || null,
+    });
+    const { error: e } = await sb.from('dancers').update(patch).eq('id', data.dancer.id);
     setSaving(false);
     if (e) {
       setError(e.message);
       toast({ type: 'error', message: e.message });
     } else {
       setSaved(true);
-      toast({ type: 'success', message: 'Profile saved' });
+      toast({ type: 'success', message: 'Settings saved' });
       onRefresh({
         dancer: {
           ...data.dancer,
-          ...form,
-          location: form.location || null,
-          bio: form.bio || null,
           avatar_url: form.avatar_url || null,
-          instagram: form.instagram || null,
-          tiktok: form.tiktok || null,
           of_handle: form.of_handle || null,
           nil_state: form.nil_state || null,
           nil_status: form.nil_status || null,
@@ -121,67 +107,18 @@ export default function SettingsTab({ data, onRefresh }: { data: DashboardData; 
         </div>
       </Card>
 
-      <Card title="Identity">
-        <Field label="Display name">
+      <Card title="Private handle">
+        <Field label="OF (private)">
           <input
-            value={form.display_name}
-            onChange={(e) => setForm({ ...form, display_name: e.target.value })}
+            value={form.of_handle}
+            onChange={(e) => setForm({ ...form, of_handle: e.target.value })}
             className={inputCls}
+            placeholder="@handle"
           />
         </Field>
-        <Field label="Location">
-          <input
-            value={form.location}
-            onChange={(e) => setForm({ ...form, location: e.target.value })}
-            className={inputCls}
-          />
-        </Field>
-        <Field label="Bio">
-          <textarea
-            value={form.bio}
-            onChange={(e) => setForm({ ...form, bio: e.target.value })}
-            className={`${inputCls} min-h-[120px] resize-y`}
-          />
-        </Field>
-        <Field label={`Years: ${form.years_experience === 20 ? '20+' : form.years_experience}`}>
-          <input
-            type="range"
-            min={1}
-            max={20}
-            value={form.years_experience}
-            onChange={(e) => setForm({ ...form, years_experience: Number(e.target.value) })}
-            className="w-full accent-purple"
-          />
-        </Field>
-      </Card>
-
-      <Card title="Social">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <Field label="Instagram">
-            <input
-              value={form.instagram}
-              onChange={(e) => setForm({ ...form, instagram: e.target.value })}
-              className={inputCls}
-              placeholder="@handle"
-            />
-          </Field>
-          <Field label="TikTok">
-            <input
-              value={form.tiktok}
-              onChange={(e) => setForm({ ...form, tiktok: e.target.value })}
-              className={inputCls}
-              placeholder="@handle"
-            />
-          </Field>
-          <Field label="OF (private)">
-            <input
-              value={form.of_handle}
-              onChange={(e) => setForm({ ...form, of_handle: e.target.value })}
-              className={inputCls}
-              placeholder="@handle"
-            />
-          </Field>
-        </div>
+        <p className="text-xs text-gray">
+          Instagram, TikTok, YouTube &amp; Twitch live under Social links on your Profile tab.
+        </p>
       </Card>
 
       <Card title="NIL">

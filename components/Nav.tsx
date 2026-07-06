@@ -19,6 +19,12 @@ export default function Nav() {
         >
           Dashboard
         </Link>
+        <Link
+          href="/login"
+          className="text-gray text-[0.7rem] md:text-[0.78rem] tracking-[0.1em] uppercase hover:text-purple transition-colors"
+        >
+          Log In
+        </Link>
         <ThemeToggle />
         <Link
           href="/onboard"

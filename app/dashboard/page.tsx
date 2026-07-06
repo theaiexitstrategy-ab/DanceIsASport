@@ -7,6 +7,8 @@ import type {
   DancerMedia,
   Dancer,
   BookingRequest,
+  DancerSocialLink,
+  DancerReelVideo,
 } from '@/lib/database.types';
 
 export const dynamic = 'force-dynamic';
@@ -19,6 +21,8 @@ export type DashboardData = {
   services: DancerService[];
   media: DancerMedia[];
   bookings: BookingRequest[];
+  socialLinks: DancerSocialLink[];
+  reelVideos: DancerReelVideo[];
   viewsLast7: { day: string; views: number }[];
   totalViews: number;
 };
@@ -38,21 +42,28 @@ export default async function DashboardPage() {
 
   if (!dancer) redirect('/onboard');
 
-  const [stylesRes, servicesRes, mediaRes, bookingsRes, viewsRes] = await Promise.all([
-    sb.from('dancer_styles').select('*').eq('dancer_id', dancer.id),
-    sb.from('dancer_services').select('*').eq('dancer_id', dancer.id).order('sort_order'),
-    sb.from('dancer_media').select('*').eq('dancer_id', dancer.id).order('sort_order'),
-    sb
-      .from('booking_requests')
-      .select('*')
-      .eq('dancer_id', dancer.id)
-      .order('created_at', { ascending: false }),
-    sb
-      .from('profile_views')
-      .select('viewed_at')
-      .eq('dancer_id', dancer.id)
-      .gte('viewed_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-  ]);
+  const [stylesRes, servicesRes, mediaRes, bookingsRes, socialRes, reelRes, viewsRes] =
+    await Promise.all([
+      sb.from('dancer_styles').select('*').eq('dancer_id', dancer.id),
+      sb.from('dancer_services').select('*').eq('dancer_id', dancer.id).order('sort_order'),
+      sb.from('dancer_media').select('*').eq('dancer_id', dancer.id).order('sort_order'),
+      sb
+        .from('booking_requests')
+        .select('*')
+        .eq('dancer_id', dancer.id)
+        .order('created_at', { ascending: false }),
+      sb.from('dancer_social_links').select('*').eq('dancer_id', dancer.id),
+      sb
+        .from('dancer_reel_videos')
+        .select('*')
+        .eq('dancer_id', dancer.id)
+        .order('display_order', { ascending: true }),
+      sb
+        .from('profile_views')
+        .select('viewed_at')
+        .eq('dancer_id', dancer.id)
+        .gte('viewed_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+    ]);
 
   const viewsByDay = new Map<string, number>();
   for (let i = 6; i >= 0; i--) {
@@ -73,6 +84,8 @@ export default async function DashboardPage() {
     services: (servicesRes.data as DancerService[]) || [],
     media: (mediaRes.data as DancerMedia[]) || [],
     bookings: (bookingsRes.data as BookingRequest[]) || [],
+    socialLinks: (socialRes.data as DancerSocialLink[]) || [],
+    reelVideos: (reelRes.data as DancerReelVideo[]) || [],
     viewsLast7: Array.from(viewsByDay.entries()).map(([day, views]) => ({ day, views })),
     totalViews: (viewsRes.data as unknown[] | null)?.length ?? 0,
   };

@@ -50,6 +50,31 @@ export default function AdminDancersTab({ data, onRefresh }: { data: AdminData; 
     }
   }
 
+  async function confirmCosign(d: Dancer) {
+    if (
+      !confirm(
+        `Confirm guardian co-sign for ${d.display_name}? This records that a parent/guardian has consented (NIL compliance). Only do this once you've verified the co-sign.`,
+      )
+    )
+      return;
+    setBusy(d.id);
+    const sb = getSupabaseBrowser();
+    const { error } = await sb
+      .from('dancers')
+      .update({ guardian_cosign_confirmed: true })
+      .eq('id', d.id);
+    setBusy(null);
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    onRefresh({
+      allDancers: data.allDancers.map((x) =>
+        x.id === d.id ? { ...x, guardian_cosign_confirmed: true } : x,
+      ),
+    });
+  }
+
   async function del(d: Dancer) {
     if (!confirm(`Delete ${d.display_name}? This removes the dancer and all related rows.`)) return;
     setBusy(d.id);
@@ -129,7 +154,18 @@ export default function AdminDancersTab({ data, onRefresh }: { data: AdminData; 
                       <div className="text-[0.7rem] text-white/40">@{d.handle}</div>
                     </td>
                     <td className="py-3 px-4 text-white/70">{d.location || '—'}</td>
-                    <td className="py-3 px-4 text-white/70 text-xs">{d.nil_status || '—'}</td>
+                    <td className="py-3 px-4 text-white/70 text-xs">
+                      {d.nil_status || '—'}
+                      {d.requires_guardian_cosign && (
+                        <div
+                          className={`text-[0.6rem] mt-1 ${
+                            d.guardian_cosign_confirmed ? 'text-mint' : 'text-amber-400'
+                          }`}
+                        >
+                          {d.guardian_cosign_confirmed ? 'Guardian ✓' : 'Guardian pending'}
+                        </div>
+                      )}
+                    </td>
                     <td className="py-3 px-4">
                       <span
                         className={`text-[0.55rem] uppercase tracking-widest px-2 py-1 rounded-full ${
@@ -160,6 +196,15 @@ export default function AdminDancersTab({ data, onRefresh }: { data: AdminData; 
                       >
                         {d.is_published ? 'Unpublish' : 'Publish'}
                       </button>
+                      {d.requires_guardian_cosign && !d.guardian_cosign_confirmed && (
+                        <button
+                          disabled={busy === d.id}
+                          onClick={() => confirmCosign(d)}
+                          className="text-xs text-amber-400 hover:text-amber-300 mr-2 disabled:opacity-50"
+                        >
+                          Confirm co-sign
+                        </button>
+                      )}
                       <button
                         disabled={busy === d.id}
                         onClick={() => del(d)}

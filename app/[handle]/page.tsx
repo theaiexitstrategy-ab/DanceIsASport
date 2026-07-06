@@ -7,6 +7,10 @@ import StatCountUp from '@/components/StatCountUp';
 import BookButton from '@/components/BookButton';
 import { headers } from 'next/headers';
 import { serverSupabase } from '@/lib/supabase';
+import { toEmbedUrl, resolveReel } from '@/lib/video';
+import { SOCIAL_PLATFORMS, toSocialUrl, socialLabel } from '@/lib/social';
+import { InstagramIcon, TikTokIcon, YouTubeIcon, TwitchIcon, VimeoIcon } from '@/components/SocialIcons';
+import type { DancerSocialLink, DancerReelVideo } from '@/lib/database.types';
 import type {
   DancerWithRelations,
   DancerStyle,
@@ -26,7 +30,9 @@ async function getDancer(handle: string): Promise<DancerWithRelations | null> {
       dancer_styles(*),
       dancer_services(*),
       dancer_media(*),
-      dancer_reviews(*)
+      dancer_reviews(*),
+      dancer_social_links(*),
+      dancer_reel_videos(*)
     `,
     )
     .eq('handle', handle.toLowerCase())
@@ -60,6 +66,20 @@ export async function generateMetadata({ params }: { params: { handle: string } 
 
 const MINT_TAGS = new Set(['D1 Prospect', 'Choreographer', 'College Athlete']);
 
+const PLATFORM_ICON: Record<string, (p: { className?: string }) => JSX.Element> = {
+  instagram: InstagramIcon,
+  tiktok: TikTokIcon,
+  youtube: YouTubeIcon,
+  twitch: TwitchIcon,
+  vimeo: VimeoIcon,
+};
+
+/** Order the dancer's social links by the canonical platform order. */
+function orderedSocials(links: DancerSocialLink[]): DancerSocialLink[] {
+  const rank = new Map(SOCIAL_PLATFORMS.map((p, i) => [p.key as string, i]));
+  return [...links].sort((a, b) => (rank.get(a.platform) ?? 99) - (rank.get(b.platform) ?? 99));
+}
+
 async function trackView(dancerId: string) {
   try {
     const h = headers();
@@ -90,6 +110,11 @@ export default async function ProfilePage({ params }: { params: { handle: string
   const styles = dancer.dancer_styles || [];
   const reviews = dancer.dancer_reviews || [];
 
+  const videoEmbed = toEmbedUrl(dancer.video_url);
+  const socialLinks = orderedSocials(dancer.dancer_social_links || []);
+  const reelVideos = (dancer.dancer_reel_videos || [])
+    .slice()
+    .sort((a: DancerReelVideo, b: DancerReelVideo) => a.display_order - b.display_order);
   const featuredMedia = media.find((m) => m.is_featured) ?? media[0];
   const otherMedia = media.filter((m) => m !== featuredMedia).slice(0, 5);
   const ratingAvg =
@@ -190,30 +215,26 @@ export default async function ProfilePage({ params }: { params: { handle: string
             </div>
           )}
 
-          {/* Social Links */}
-          {(dancer.instagram || dancer.tiktok || dancer.of_handle) && (
-            <div className="flex flex-col gap-2 animate-[fadeUp_0.6s_0.8s_both]">
-              {dancer.instagram && (
-                <a
-                  href={`https://instagram.com/${dancer.instagram.replace(/^@/, '')}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-2.5 text-ink2 text-[0.78rem] no-underline px-3 py-2 border border-gray-pale rounded-[10px] transition-all bg-bg hover:border-purple-light hover:text-purple hover:bg-purple-pale hover:translate-x-1"
-                >
-                  <span className="social-dot" /> @{dancer.instagram.replace(/^@/, '')} — Instagram
-                </a>
-              )}
-              {dancer.tiktok && (
-                <a
-                  href={`https://tiktok.com/@${dancer.tiktok.replace(/^@/, '')}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-2.5 text-ink2 text-[0.78rem] no-underline px-3 py-2 border border-gray-pale rounded-[10px] transition-all bg-bg hover:border-purple-light hover:text-purple hover:bg-purple-pale hover:translate-x-1"
-                >
-                  <span className="social-dot" style={{ animationDelay: '0.5s' }} /> @{dancer.tiktok.replace(/^@/, '')} —
-                  TikTok
-                </a>
-              )}
+          {/* Social link-tree — only platforms the dancer has actually filled in */}
+          {socialLinks.length > 0 && (
+            <div className="flex flex-wrap gap-2.5 animate-[fadeUp_0.6s_0.8s_both]">
+              {socialLinks.map((l) => {
+                const Icon = PLATFORM_ICON[l.platform];
+                if (!Icon) return null;
+                return (
+                  <a
+                    key={l.id}
+                    href={toSocialUrl(l.platform, l.handle_or_url)}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={socialLabel(l.platform)}
+                    title={socialLabel(l.platform)}
+                    className="w-11 h-11 flex items-center justify-center rounded-full bg-white/80 border border-purple/15 text-purple backdrop-blur-sm transition-all hover:text-white hover:bg-purple hover:-translate-y-0.5 hover:shadow-purple-soft active:scale-95"
+                  >
+                    <Icon className="w-5 h-5" />
+                  </a>
+                );
+              })}
             </div>
           )}
 
@@ -232,6 +253,66 @@ export default async function ProfilePage({ params }: { params: { handle: string
               <p className="font-serif text-[1.1rem] font-normal leading-[1.85] text-ink2 max-w-[580px]">
                 {dancer.bio}
               </p>
+            </Reveal>
+          )}
+
+          {videoEmbed && (
+            <Reveal>
+              <SectionLabel>Recruiting Video</SectionLabel>
+              <div className="relative w-full max-w-[720px] aspect-video rounded-[14px] overflow-hidden border border-purple/15 bg-purple-pale/40 shadow-[0_16px_40px_rgba(124,92,191,0.12)]">
+                <iframe
+                  src={videoEmbed}
+                  title={`${dancer.display_name} — recruiting video`}
+                  className="absolute inset-0 w-full h-full"
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </Reveal>
+          )}
+
+          {reelVideos.length > 0 && (
+            <Reveal>
+              <SectionLabel>Reel</SectionLabel>
+              <div className="flex gap-3 overflow-x-auto pb-3 -mx-1 px-1 snap-x snap-mandatory reel-scroll">
+                {reelVideos.map((rv: DancerReelVideo) => {
+                  const { kind, embedUrl, platform } = resolveReel(rv.video_url);
+                  const Icon = PLATFORM_ICON[platform ?? ''] ?? YouTubeIcon;
+                  return (
+                    <div key={rv.id} className="snap-start shrink-0 w-[210px] md:w-[240px]">
+                      <div className="relative w-full aspect-[9/16] rounded-[16px] overflow-hidden border border-purple/15 bg-purple-pale/40 shadow-[0_10px_30px_rgba(124,92,191,0.12)]">
+                        {kind === 'embed' && embedUrl ? (
+                          <iframe
+                            src={embedUrl}
+                            title="Reel video"
+                            loading="lazy"
+                            className="absolute inset-0 w-full h-full"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        ) : (
+                          <a
+                            href={rv.video_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={`Watch on ${socialLabel(platform ?? 'video')}`}
+                            className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-purple-pale to-mint-pale group"
+                          >
+                            <div className="w-14 h-14 rounded-full bg-white/80 border border-purple/15 text-purple flex items-center justify-center transition-transform group-hover:scale-110">
+                              <Icon className="w-7 h-7" />
+                            </div>
+                            <span className="text-[0.68rem] uppercase tracking-[0.15em] text-purple-mid">
+                              Watch on {socialLabel(platform ?? 'video')}
+                            </span>
+                            <span className="absolute bottom-3 right-3 text-purple text-lg">▶</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </Reveal>
           )}
 
@@ -345,6 +426,9 @@ export default async function ProfilePage({ params }: { params: { handle: string
         @keyframes leftSlide { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes badgePop { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
+        .reel-scroll { -webkit-overflow-scrolling: touch; scroll-behavior: smooth; scrollbar-width: thin; }
+        .reel-scroll::-webkit-scrollbar { height: 6px; }
+        .reel-scroll::-webkit-scrollbar-thumb { background: rgba(124,92,191,0.25); border-radius: 999px; }
       `}</style>
     </>
   );
