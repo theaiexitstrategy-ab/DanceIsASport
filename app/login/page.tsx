@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import Logo from '@/components/Logo';
 import Particles from '@/components/Particles';
+import OAuthButtons from '@/components/auth/OAuthButtons';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 function LoginInner() {
@@ -14,30 +15,7 @@ function LoginInner() {
   const [email, setEmail] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  async function signInWithGoogle() {
-    setGoogleLoading(true);
-    setError(null);
-    try {
-      const sb = getSupabaseBrowser();
-      const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      // Same destination as magic link: /auth/callback exchanges the code, then routes to `next`.
-      const { error: e2 } = await sb.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` },
-      });
-      // On success the browser redirects to Google, so we only reach here on error.
-      if (e2) {
-        setError(e2.message);
-        setGoogleLoading(false);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
-      setGoogleLoading(false);
-    }
-  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -102,20 +80,7 @@ function LoginInner() {
                 Enter your email. We&apos;ll send you a link to sign in instantly.
               </p>
 
-              <button
-                type="button"
-                onClick={signInWithGoogle}
-                disabled={googleLoading}
-                className="w-full flex items-center justify-center gap-3 bg-white border border-gray-pale text-ink font-medium py-3.5 rounded-xl hover:border-purple-light hover:bg-purple-pale/40 active:scale-[0.98] transition-all disabled:opacity-60"
-              >
-                <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
-                  <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z" />
-                  <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.02-3.7H.96v2.34A9 9 0 0 0 9 18z" />
-                  <path fill="#FBBC05" d="M3.98 10.72a5.4 5.4 0 0 1 0-3.44V4.94H.96a9 9 0 0 0 0 8.12l3.02-2.34z" />
-                  <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .96 4.94l3.02 2.34C4.68 5.16 6.66 3.58 9 3.58z" />
-                </svg>
-                {googleLoading ? 'Redirecting…' : 'Continue with Google'}
-              </button>
+              <OAuthButtons next={next} mode="login" onError={setError} />
 
               <div className="flex items-center gap-3 my-6">
                 <span className="flex-1 h-px bg-gray-pale" />
