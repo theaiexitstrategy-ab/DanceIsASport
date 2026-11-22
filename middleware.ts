@@ -40,7 +40,7 @@ export async function middleware(req: NextRequest) {
   }
 
   if (path.startsWith('/admin') && user) {
-    const role = (user.user_metadata as Record<string, unknown> | null)?.role;
+    const role = (user.app_metadata as Record<string, unknown> | null)?.role;
     if (role !== 'admin') {
       const redirect = req.nextUrl.clone();
       redirect.pathname = '/dashboard';

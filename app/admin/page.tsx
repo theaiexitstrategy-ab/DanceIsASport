@@ -27,7 +27,7 @@ export default async function AdminPage() {
     data: { user },
   } = await sb.auth.getUser();
   if (!user) redirect('/login?next=/admin');
-  const role = (user.user_metadata as Record<string, unknown> | null)?.role;
+  const role = (user.app_metadata as Record<string, unknown> | null)?.role;
   if (role !== 'admin') redirect('/dashboard');
 
   const [dancersCountRes, publishedCountRes, bookingsCountRes, viewsCountRes, recentDancersRes, recentBookingsRes, allDancersRes, allBookingsRes, settingsRes] =
